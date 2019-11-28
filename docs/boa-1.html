@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.9">
+ <TITLE>Boa Webserver: Introduction</TITLE>
+ <LINK HREF="boa-2.html" REL=next>
+
+ <LINK HREF="boa.html#toc1" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="boa-2.html">Next</A>
+Previous
+<A HREF="boa.html#toc1">Contents</A>
+<HR>
+<H2><A NAME="s1">1. Introduction</A></H2>
+
+<P>
+<P>
+<H2><A NAME="ss1.1">1.1 Introduction</A>
+</H2>
+
+<P>
+<P>Boa is a single-tasking HTTP server.  That means that unlike
+traditional web servers, it does not fork for each incoming
+connection, nor does it fork many copies of itself to handle multiple
+connections.  It internally multiplexes all of the ongoing HTTP
+connections, and forks only for CGI programs (which must be separate
+processes), automatic directory generation, and automatic file
+gunzipping.  Preliminary tests show Boa is capable of
+handling several thousand hits per second on a 300 MHz Pentium and
+dozens of hits per second on a lowly 20 MHz 386/SX.
+<P>The primary design goals of Boa are speed and security.  Security,
+in the sense of "can't be subverted by a malicious user," not
+"fine grained access control and encrypted communications".
+Boa is not intended as a feature-packed server; if you want one of those,
+check out 
+<A HREF="http://hopf.math.nwu.edu/">WN</A> from John Franks.
+Modifications to Boa that improve its speed, security, robustness, and
+portability, are eagerly sought.  Other features may be added if they
+can be achieved without hurting the primary goals.
+<P>Boa was created in 1991 by Paul Phillips
+<CODE>&lt;psp@well.com&gt;</CODE>.
+It is now being maintained and enhanced by Larry Doolittle
+<CODE>&lt;ldoolitt@boa.org&gt;</CODE> and Jon Nelson
+<CODE>&lt;jnelson@boa.org&gt;</CODE>.
+Please see the acknowledgement section for further
+details.
+<P>GNU/Linux is the development platform at the moment, other OS's are known to work.
+If you'd like to contribute to this effort, contact Larry or Jon via e-mail.
+<P>
+<HR>
+<A HREF="boa-2.html">Next</A>
+Previous
+<A HREF="boa.html#toc1">Contents</A>
+</BODY>
+</HTML>

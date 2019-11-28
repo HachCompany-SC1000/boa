@@ -1,2 +1,0 @@
-# boa
-boa web server

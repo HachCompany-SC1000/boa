@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.9">
+ <TITLE>Boa Webserver: Installation and Usage</TITLE>
+ <LINK HREF="boa-3.html" REL=next>
+ <LINK HREF="boa-1.html" REL=previous>
+ <LINK HREF="boa.html#toc2" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="boa-3.html">Next</A>
+<A HREF="boa-1.html">Previous</A>
+<A HREF="boa.html#toc2">Contents</A>
+<HR>
+<H2><A NAME="s2">2. Installation and Usage</A></H2>
+
+<P>
+<P>Boa is currently being developed and tested on GNU/Linux/i386.
+The code is straightforward (more so than most other servers),
+so it should run easily on most modern Unix-alike platforms.  Recent
+versions of Boa worked fine on FreeBSD, SunOS 4.1.4, GNU/Linux-SPARC,
+and HP-UX 9.0.  Pre-1.2.0 GNU/Linux kernels may not work because of
+deficient mmap() implementations.
+<P>It should be very simple to install and use Boa:
+<DL>
+<DT><B>Unpack</B><DD><P>
+<OL>
+<LI>Choose, and cd into, a convenient directory for the package.</LI>
+<LI><CODE>tar -xvzf boa-0.94.tar.gz</CODE>, or for those of you with an archaic
+(non-GNU) tar, <BR>
+<CODE>gzip -cd &lt; boa-0.94.tar.gz | tar -xvf -</CODE></LI>
+<LI>Read the documentation.  Really.</LI>
+</OL>
+<DT><B>Build</B><DD><P>
+<OL>
+<LI>cd into the <CODE>src</CODE> directory.</LI>
+<LI>(optional) Change the default SERVER_ROOT by setting the #define
+at the top of src/defines.h</LI>
+<LI>Type <CODE>./configure; make</CODE></LI>
+<LI>Report any errors to the maintainers for resolution, or strike
+out on your own.</LI>
+</OL>
+<DT><B>Configure</B><DD><P>
+<OL>
+<LI>Choose a user and server port under which Boa can run.  The
+traditional port is 80, and user <CODE>nobody</CODE> (create if
+you need to) is often a good selection for security purposes.
+If you don't have (or choose not to use) root privileges, you
+can not use port numbers less than 1024, nor can you switch user id.</LI>
+<LI>Choose a server root.  The <CODE>conf</CODE> directory within the
+server root must hold your copy of the configuration file
+<EM>boa.conf</EM>.</LI>
+<LI>Choose locations for log files, CGI programs (if any), and
+the base of your URL tree.</LI>
+<LI>Set the location of the <CODE>mime.types</CODE> file.</LI>
+<LI>Edit <EM>conf/boa.conf</EM> according to your
+choices above (this file documents itself).  Read through this file
+to see what other features you can configure.</LI>
+</OL>
+<DT><B>Start</B><DD><P>Start Boa.  If you didn't build the right SERVER_ROOT into the
+binary, you can specify it on the command line with the -c option
+(command line takes precedence).<BR>
+Example: <CODE>./boa -c /usr/local/boa</CODE>
+<P>
+<DT><B>Test</B><DD><P>At this point the server should run and serve documents.
+If not, check the error_log file for clues.
+<P>
+<DT><B>Install</B><DD><P>Copy the binary to a safe place, and put the invocation into
+your system startup scripts.  Use the same -c option you used
+in your initial tests.
+</DL>
+<P>
+<H2><A NAME="ss2.1">2.1 Files used by Boa</A>
+</H2>
+
+<P>
+<P>
+<DL>
+<DT><B>boa.conf</B><DD><P>This file is the sole configuration file for Boa. The directives in this 
+file are defined in the DIRECTIVES section. 
+<P>
+<DT><B>mime.types</B><DD><P>The MimeTypes &lt;filename&gt; defines what Content-Type Boa will send in an 
+HTTP/1.0 or better transaction. 
+</DL>
+<P>
+<H2><A NAME="ss2.2">2.2 Compile-Time and Command-Line Options</A>
+</H2>
+
+<P>
+<P>
+<DL>
+<DT><B>SERVER_ROOT</B><DD><P>The default server root as #defined by
+SERVER_ROOT in <EM>defines.h</EM> can be overridden on the
+commandline using the <B>-c</B> option.
+The server root must hold your local copy of the configuration
+file <EM>boa.conf</EM>.<BR>
+Example: /usr/sbin/boa -c /etc/boa
+</DL>
+<P>
+<H2><A NAME="ss2.3">2.3 boa.conf Directives</A>
+</H2>
+
+<P>
+<P>The Boa configuration file is parsed with a lex/yacc or flex/bison 
+generated parser. If it reports an error, the line number will be 
+provided; it should be easy to spot. The syntax of each of these rules 
+is very simple, and they can occur in any order. Where possible, these 
+directives mimic those of NCSA httpd 1.3; I (Paul Phillips) saw no reason 
+to introduce gratuitous differences. 
+<P>Note: the "ServerRoot" is not in this configuration file. It can be 
+compiled into the server (see defines.h ) or specified on the command
+line with the -c option. 
+<P>The following directives are contained in the <EM>boa.conf</EM> file, and most, 
+but not all, are required. 
+<P>
+<DL>
+<DT><B>Port &lt;integer&gt;</B><DD><P>This is the port that Boa runs on. The default port for http servers is 80.
+If it is less than 1024, the server must be started as root.
+<P>
+<DT><B>Listen &lt;IP&gt;</B><DD><P>Listen: the Internet address to bind(2) to.  If you leave it out,
+it takes the behavior before 0.93.17.2, which is to bind to all  addresses
+(INADDR_ANY).
+You only get one "Listen" directive,  if you want service on multiple
+IP addresses, you have three choices:
+<OL>
+<LI>Run boa without a "Listen" directive
+<OL>
+<LI>All addresses are treated the same; makes sense if the addresses  are
+localhost, ppp, and eth0.</LI>
+<LI>Use the VirtualHost directive below to point requests to different files.
+Should be good for a very large number of addresses (web hosting clients).</LI>
+</OL>
+</LI>
+<LI>Run one copy of boa per IP address, each has its own configuration  with a
+"Listen" directive.  No big deal up to a few tens of addresses.      Nice separation
+between clients.  The name you provide gets run through inet_aton(3), so you have to
+use dotted  quad notation.  This configuration is too important to trust some DNS.</LI>
+</OL>
+<P>
+<DT><B>User &lt;user name or UID&gt;</B><DD><P>The name or UID the server should run as. For Boa to attempt this, the
+server must be started as root. 
+<P>
+<DT><B>Group &lt;group name or GID&gt;</B><DD><P>The group name or GID the server should run as. For Boa to attempt this,
+the server must be started as root. 
+<P>
+<DT><B>ServerAdmin &lt;email address&gt;</B><DD><P>The email address where server problems should be sent. Note: this is not
+currently used.
+<P>
+<DT><B>ErrorLog &lt;filename&gt;</B><DD><P>The location of the error log file. If this does not start with /, it is
+considered relative to the server root. Set to /dev/null if you don't want
+errors logged. 
+<P>
+<DT><B>AccessLog &lt;filename&gt;</B><DD><P>The location of the access log file. If this does not start with /, it is
+considered relative to the server root. Comment out or set to /dev/null
+(less effective) to disable access logging. 
+<P>
+<DT><B>VerboseCGILogs</B><DD><P>This is a logical switch and does not take any parameters. Comment out to
+disable. All it does is switch on or off logging of when CGIs are launched and when
+the children return.
+<P>
+<DT><B>CgiLog &lt;filename&gt;</B><DD><P>The location of the CGI error log file.  If
+specified, this is the file that the stderr of CGIs is tied to.  Otherwise, writes
+to stderr meet the bit bucket.
+<P>
+<DT><B>ServerName &lt;server_name&gt;</B><DD><P>The name of this server that should be sent back to clients if different
+than that returned by gethostname.
+<P>
+<DT><B>VirtualHost</B><DD><P>This is a logical switch and does not take any parameters.
+Comment out to disable. Given  DocumentRoot /var/www, requests on interface `A' or
+IP `IP-A' become /var/www/IP-A. Example: http://localhost/ becomes 
+/var/www/127.0.0.1 
+<P>
+<DT><B>DocumentRoot &lt;directory&gt;</B><DD><P>The root directory of the HTML documents. If this does not start with /, 
+it is considered relative to the server root. 
+<P>
+<DT><B>UserDir &lt;directory&gt;</B><DD><P>The name of the directory which is appended onto a user's home directory 
+if a &nbsp;user request is received. 
+<P>
+<DT><B>DirectoryIndex &lt;filename&gt;</B><DD><P>Name of the file to use as a pre-written HTML directory index. Please 
+make and use these files. On the fly creation of directory indexes
+can be slow. 
+<P>
+<DT><B>DirectoryMaker &lt;full pathname to program&gt;</B><DD><P>Name of the program used
+to generate on-the-fly directory listings.  The program must take one or two
+command-line arguments, the first being the directory to index (absolute), and the
+second, which is  optional, should be the "title" of the document be. Comment out if
+you don't  want on the fly directory listings. If this  does not start with /, it is
+considered relative to the server root. 
+<P>
+<P>
+<DT><B>DirectoryCache &lt;directory&gt;</B><DD><P>DirectoryCache: If DirectoryIndex doesn't exist, and DirectoryMaker has been
+commented out, the the on-the-fly indexing of Boa can be used  to generate indexes
+of directories. Be warned that the output is extremely minimal and can cause
+delays when slow disks are used.  Note: The DirectoryCache must be writable by the
+same user/group that Boa runs as.
+<P>
+<DT><B>KeepAliveMax &lt;integer&gt;</B><DD><P>Number of KeepAlive requests to allow per connection. Comment out, or set 
+to 0 to disable keepalive processing. 
+<P>
+<DT><B>KeepAliveTimeout &lt;integer&gt;</B><DD><P>Number of seconds to wait before keepalive connections time out. 
+<P>
+<DT><B>MimeTypes &lt;file&gt;</B><DD><P>The location of the mime.types file. If this does not start with /, it is 
+considered relative to the server root.
+Comment out to avoid loading mime.types (better use AddType!)
+<P>
+<DT><B>DefaultType &lt;mime type&gt;</B><DD><P>MIME type used if the file extension is unknown, or there is no file 
+extension. 
+<P>
+<DT><B>AddType &lt;mime type&gt; &lt;extension&gt; extension...</B><DD><P>Associates a MIME type 
+with an extension or extensions. 
+<P>
+<DT><B>Redirect, Alias, and ScriptAlias &lt;path1&gt; &lt;path2&gt;</B><DD><P>Redirect, Alias, and 
+ScriptAlias all have the same semantics -- they match the
+beginning of a request and take appropriate action. Use Redirect for 
+other servers, Alias for the same server, and ScriptAlias to enable
+directories for script execution. 
+<P>
+<DL>
+<DT><B>Redirect</B><DD><P>allows you to tell clients about documents which used to exist 
+in your server's namespace, but do not anymore. This allows you
+tell the clients where to look for the relocated document. 
+<P>
+<DT><B>Alias</B><DD><P>aliases one path to another. Of course, symbolic links in the 
+file system work fine too. 
+<P>
+<DT><B>ScriptAlias</B><DD><P>maps a virtual path to a directory for serving scripts. 
+</DL>
+</DL>
+<P>
+<H2><A NAME="ss2.4">2.4 Security</A>
+</H2>
+
+<P>
+<P>Boa has been designed to use the existing file system security.  
+In <EM>boa.conf</EM>, the directives <B>user</B> and 
+<B>group</B> determine who Boa will run as, if launched by root.
+By default, the user/group is nobody/nogroup.  This allows quite a bit
+of flexibility.  For example, if you want to disallow access to otherwise
+accessible 
+directories or files, simply make them inaccessible to nobody/nogroup.
+If the user that Boa runs as is &quot;boa&quot; and the groups that 
+&quot;boa&quot; belongs to include &quot;web-stuff&quot; 
+then files/directories accessible by users with group 
+&quot;web-stuff&quot; will also be accessible to Boa.
+<P>
+<P>
+<P>The February 2000 hoo-rah from CERT
+<A HREF="http://www.cert.org/advisories/CA-2000-02.html">advisory CA-2000-02</A>
+has little to do with Boa.  As of version 0.94.4, Boa's escaping rules have been
+cleaned up a little, but they weren't that bad before.  The example CGI
+programs have been updated to show what effort is needed there.  If you
+write, maintain, or use CGI programs under Boa (or any other server) it's
+worth your while to read and understand this advisory.  The real problem,
+however, boils down to browser and web page designers emphasizing frills
+over content and security.  The market leading browsers assume (incorrectly)
+that all web pages are trustworthy.
+<P>
+<HR>
+<A HREF="boa-3.html">Next</A>
+<A HREF="boa-1.html">Previous</A>
+<A HREF="boa.html#toc2">Contents</A>
+</BODY>
+</HTML>

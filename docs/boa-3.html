@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.9">
+ <TITLE>Boa Webserver: Relative Performance, Limits, and Design Philosophy</TITLE>
+ <LINK HREF="boa-4.html" REL=next>
+ <LINK HREF="boa-2.html" REL=previous>
+ <LINK HREF="boa.html#toc3" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="boa-4.html">Next</A>
+<A HREF="boa-2.html">Previous</A>
+<A HREF="boa.html#toc3">Contents</A>
+<HR>
+<H2><A NAME="s3">3. Relative Performance, Limits, and Design Philosophy</A></H2>
+
+<P>
+<P>There are many issues that become more difficult to resolve in a single 
+tasking web server than in the normal forking model.  Here is a partial 
+list -- there are probably many that haven't encountered yet.
+<P>
+<H2><A NAME="ss3.1">3.1 Relative Performance</A>
+</H2>
+
+<P>
+<P>Performance is a very difficult thing to quantitatively measure.
+Due to the fact that there are very few good and accessible 
+performance benchmarks, our benchmarking is limited to
+very simple means.  We use the Benchmark ZeusBench, which may no longer
+be available.  ZeusBench takes only a few commandline parameters, which
+makes it easy to use.  It is also useful as a diagnostic tool.
+<P>ZeusBench has the capacity to make its requests over Ethernet as well
+as localhost.  However, as bad as using localhost for anything might
+well be, it *does* eliminate to a great deal the bottleneck that is
+Ethernet.  As a standard rule, we use options that have ZeusBench attempt
+to make either 10,000 or 20,000 successful requests.
+<P>The following benchmarks were run on a GNU/Linux 2.0.33 egcs 1.0.1 compiled
+kernel, on an Intel Pentium 200 MMX, over localhost, and with 
+a file size of 2448 bytes.  Each server was tuned with the following options:
+access logging turned off, 100 keepalive, and no DNS lookups 
+or unnecessary modules for Apache.
+<P>Like so many benchmarks, these are to be taken with a grain of salt.
+<P>Boa:
+<PRE>
+---
+Server:                 Boa/0.93.9
+Doucment Length:        2448
+Concurency Level:       215
+Time taken for tests:   27.526 seconds
+Complete requests:      20000
+Failed requests:        0
+Keep-Alive requests:    20091
+Bytes transfered:       53743425
+HTML transfered:        49182768
+Requests per seconds:   726.59
+Transfer rate:          1952.46 kb/s
+
+Connnection Times (ms)
+           min   avg   max
+Connect:     0     2   325
+Total:      87   292  5602
+---  
+</PRE>
+<P>Apache:
+<PRE>
+---
+Server:                 Apache/1.2.5
+Doucment Length:        2448
+Concurency Level:       215
+Time taken for tests:   38.100 seconds
+Complete requests:      20000
+Failed requests:        0
+Keep-Alive requests:    19850
+Bytes transfered:       54576586
+HTML transfered:        49035804
+Requests per seconds:   524.93
+Transfer rate:          1432.46 kb/s
+
+Connnection Times (ms)
+           min   avg   max
+Connect:     0     0   101
+Total:       4   250 37783
+---
+</PRE>
+<P>As can be seen, Boa is significantly faster than Apache.
+<P>
+<H2><A NAME="ss3.2">3.2 Limits</A>
+</H2>
+
+<P>
+<P>
+<DL>
+<DT><B>Slow file systems</B><DD><P>The file systems being served should be much faster than the
+network connection to the HTTP requests, or performance will suffer.
+For instance, if a document is served from a CD-ROM, the whole server
+(including all other currently incomplete data transfers) will stall
+while the CD-ROM spins up.  This is a consequence of the fact that Boa
+mmap()'s each file being served, and lets the kernel read and cache
+pages as best it knows how.  When the files come from a local disk
+(the faster the better), this is no problem, and in fact delivers
+nearly ideal performance under heavy load.  Avoid serving documents
+from NFS and CD-ROM unless you have even slower inbound net
+connections (e.g., POTS SLIP).
+<P>
+<DT><B>DNS lookups</B><DD><P>Writing a nonblocking gethostbyaddr is a difficult and not very
+enjoyable task.  Paul Phillips experimented with several methods, 
+including a separate logging process, before removing hostname 
+lookups entirely. There is a companion program with Boa 
+<EM>util/resolver.pl</EM> that will postprocess the logfiles and 
+replace IP addresses with hostnames, which is much faster no matter 
+what sort of server you run.
+<P>
+<DT><B>Identd lookups</B><DD><P>Same difficulties as hostname lookups; not included.
+Boa provides a REMOTE_PORT environment variable, in addition
+to REMOTE_ADDR, so that a CGI program can do its own ident.
+<P>
+<DT><B>Password file lookups via NIS</B><DD><P>If users are allowed to serve HTML from their home directories,
+password file lookups can potentially block the process.  To lessen
+the impact, each user's home directory is cached by Boa so it need
+only be looked up once.
+<P>
+<DT><B>Running out of file descriptors</B><DD><P>Since a file descriptor is needed for every ongoing connection
+(two for non-nph CGIs, directories, and automatic gunzipping of files),
+it is possible though highly improbable to run out of file
+descriptors.  The symptoms of this conditions may vary with
+your particular unix variant, but you will probably see log
+entries giving an error message for <CODE>accept</CODE>.
+Try to build your kernel to give an adequate number for
+your usage - GNU/Linux provides 256 out of the box, more than
+enough for most people.
+</DL>
+<P>
+<H2><A NAME="ss3.3">3.3 Differences between Boa and other web servers</A>
+</H2>
+
+<P>
+<P>In the pursuit of speed and simplicity, some aspects of Boa differ
+from the popular web servers.  In no particular order:
+<P>
+<DL>
+<DT><B>REMOTE_HOST environment variable not set for CGI programs</B><DD><P>The REMOTE_HOST environment variable is not set for CGI programs,
+for reasons already described.  This is easily worked around because the
+IP address is provided in the REMOTE_ADDR variable, so (if the CGI
+program actually cares) gethostbyaddr or a variant can be used.
+<P>
+<DT><B>There are no server side includes in Boa</B><DD><P>We don't like them, and they are too slow to parse.  We will consider
+more efficient alternatives, see the 
+<A HREF="todo.txt">todo.txt</A> to-do list.
+<P>
+<DT><B>There are no access control features</B><DD><P>Boa will follow symbolic links, and serve any file that it can
+read.  The expectation is that you will configure Boa to run as user
+"nobody", and only files configured world readable will come
+out.  See the 
+<A HREF="todo.txt">todo.txt</A> to-do list.
+<P>
+<DT><B>No chroot option</B><DD><P>There is no option to run chrooted.  If anybody wants this, and is
+willing to try out experimental code, contact the maintainers.
+</DL>
+<P>
+<H2><A NAME="ss3.4">3.4 Unexpected behavior</A>
+</H2>
+
+<P>
+<P>
+<DL>
+<DT><B>SIGHUP handling</B><DD><P>Like any good server, Boa traps SIGHUP and rereads <EM>boa.conf</EM>.
+However, under normal circumstances, it has already given away
+permissions, so many items listed in <EM>boa.conf</EM> can not take effect.
+No attempt is made to change uid, gid, log files, or server port.
+All other configuration changes should take place smoothly.
+<P>
+<DT><B>Relative URL handling</B><DD><P>Not all browsers handle relative URLs correctly.  Boa will not
+cover up for this browser bug, and will typically report 404 Not Found
+for URL's containing odd combinations of "../"'s.
+</DL>
+<P>
+<HR>
+<A HREF="boa-4.html">Next</A>
+<A HREF="boa-2.html">Previous</A>
+<A HREF="boa.html#toc3">Contents</A>
+</BODY>
+</HTML>
